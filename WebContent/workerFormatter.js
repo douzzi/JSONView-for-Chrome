@@ -49,14 +49,32 @@ function arrayToHTML(json) {
 	return output;
 }
 
+function transform(key, value) {
+	if (key.toLowerCase().indexOf("time") < 0 && !key.toLowerCase().endsWith("at")) {
+		return [key, value];
+	}
+	if (typeof value != 'number') {
+		return [key, value];
+	}
+	var millis = value;
+	if (millis < 946684800*1000) {  // 946684800 is the epoch second of 2000-01-01
+		// The value is most likely seconds instead of milliseconds.
+		millis *= 1000;
+	}
+	return [key + '(s)', new Date(millis).toISOString()];
+}
+
 function objectToHTML(json) {
 	var i, key, length, keys = Object.keys(json), output = '<div class="collapser"></div>{<span class="ellipsis"></span><ul class="obj collapsible">', hasContents = false;
 	for (i = 0, length = keys.length; i < length; i++) {
 		key = keys[i];
+		trans = transform(key, json[key]);
+		key = trans[0];
+		value = trans[1];
 		hasContents = true;
 		output += '<li><div class="hoverable">';
 		output += '<span class="property">' + htmlEncode(key) + '</span>: ';
-		output += valueToHTML(json[key]);
+		output += valueToHTML(value);
 		if (i < length - 1)
 			output += ',';
 		output += '</div></li>';
